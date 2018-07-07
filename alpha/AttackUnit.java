@@ -5,13 +5,15 @@ import aic2018.*;
 public class AttackUnit {
 
     UnitController uc;
-    UsefulInfo data;
+    Data data;
+    Tools tools;
 
     public AttackUnit(){}
 
-    public AttackUnit(UnitController _uc) {
+    public AttackUnit(UnitController _uc, Data _data) {
         uc = _uc;
-        data = new UsefulInfo(uc);
+        data = _data;
+        tools = new Tools(data);
     }
 
     public void run() {
