@@ -5,18 +5,17 @@ import aic2018.*;
 public class Barracks {
 
     UnitController uc;
-    UsefulInfo data;
+    Data data;
+    Tools tools;
 
 
-    public Barracks(UnitController _uc) {
+    public Barracks(UnitController _uc, Data _data) {
         uc = _uc;
-        data = new UsefulInfo(uc);
+        data = _data;
+        tools = new Tools(data);
     }
 
     public void run() {
-
-
-
 
         //Make Warriors
         //int randIndex = (int)(Math.random()*4);

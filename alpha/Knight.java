@@ -5,11 +5,11 @@ import aic2018.*;
 public class Knight extends AttackUnit {
 
     UnitController uc;
-    UsefulInfo data;
+    Data data;
 
-    public Knight(UnitController _uc) {
+    public Knight(UnitController _uc, Data _data) {
         uc = _uc;
-        data = new UsefulInfo(uc);
+        data = _data;
     }
 
     public void run() {

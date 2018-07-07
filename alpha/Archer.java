@@ -5,11 +5,11 @@ import aic2018.*;
 public class Archer extends AttackUnit {
 
     UnitController uc;
-    UsefulInfo data;
+    Data data;
 
-    public Archer(UnitController _uc) {
+    public Archer(UnitController _uc, Data _data) {
         uc = _uc;
-        data = new UsefulInfo(uc);
+        data = _data;
     }
 
     public void run() {
