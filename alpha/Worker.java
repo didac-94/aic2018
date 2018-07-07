@@ -26,6 +26,17 @@ public class Worker {
             }
         }
 
+        // Report enemies around
+        boolean enemyFoundByMates = tools.enemyFoundByMates();
+        boolean enemyFoundByMe = false;
+        if (!enemyFoundByMates) enemyFoundByMe = tools.enemyFoundByMe();
+
+        if (enemyFoundByMates) {
+            //Move in enemy direction
+            int coded_location = uc.read(uc.getInfo().getID());
+            // uc.println(coded_location);
+        }
+
         //Plant some trees or make some workers
         if (data.nTrees > 6*data.nWorker) {
             Direction randomDir = tools.RandomDir();
@@ -46,29 +57,50 @@ public class Worker {
             }
         }
 
-        //Move towards the healthiest tree in sight
-        TreeInfo visibleTrees[] = uc.senseTrees();
-        if (visibleTrees.length > 0) {
-            int healthiestTree = 0;
-            for (int i = 0; i < visibleTrees.length; i++) {
-                TreeInfo tree = visibleTrees[i];
-                //TODO: si son iguals (o casi) ens quedem el mes proper
-                if (tree.remainingGrowthTurns > 0) continue;
-                if (tree.health > visibleTrees[healthiestTree].health) healthiestTree = i;
-            }
-            TreeInfo hT = visibleTrees[healthiestTree];
-            Location htPos = visibleTrees[healthiestTree].location;
-            Direction htDir = uc.getLocation().directionTo(htPos);
-            int distToHt = uc.getLocation().distanceSquared(htPos);
-            if (distToHt > 2) {
-                if (uc.canMove(htDir)) uc.move(htDir);
-            } else {
-                if (tools.CanChop(hT)) uc.attack(hT);
-            }
+        UnitInfo[] unitsNear = uc.senseUnits(data.NEAR_RADIUS, uc.getTeam());
+        int nWorkersAround = tools.MatesAround(unitsNear, UnitType.WORKER);
+
+        if (nWorkersAround > 0) {
+            Direction factDir = tools.OppositeDir(nWorkersAround, unitsNear);
+            factDir = tools.Roomba(factDir);
+            if (uc.canMove(factDir)) uc.move(factDir); // canMove irrelevant
         } else {
-            Direction randomDir = tools.RandomDir();
-            if (uc.canMove(randomDir)) {
-                uc.move(randomDir);
+            //Move towards the closest healthy tree in sight
+            TreeInfo visibleTrees[] = uc.senseTrees();
+            if (visibleTrees.length > 0) {
+                int closestHealthyTree = 0;
+                int distToClosestTree = 10000;
+                Location myLoc = uc.getLocation();
+
+                for (int i = 0; i < visibleTrees.length; i++) {
+                    TreeInfo tree = visibleTrees[i];
+                    if (tree.remainingGrowthTurns > 0
+                            || tree.health <= data.MIN_TO_HEALTHY
+                            || myLoc.distanceSquared(tree.location) == 0) continue;
+                    if (myLoc.distanceSquared(tree.location) < distToClosestTree) {
+                        distToClosestTree = myLoc.distanceSquared(tree.location);
+                        closestHealthyTree = i;
+                    }
+                }
+
+                TreeInfo hT = visibleTrees[closestHealthyTree];
+                Location htPos = visibleTrees[closestHealthyTree].location;
+                Direction htDir = uc.getLocation().directionTo(htPos);
+
+                int distToHt = uc.getLocation().distanceSquared(htPos);
+                if (distToHt > 2) {
+                    htDir = tools.Roomba(htDir);
+                    if (uc.canMove(htDir)) uc.move(htDir);
+                } else {
+                    htDir = tools.Roomba(htDir);
+                    if (tools.CanChop(hT)) uc.attack(hT);
+                }
+            } else {
+                Direction randomDir = tools.RandomDir();
+                randomDir = tools.Roomba(randomDir);
+                if (uc.canMove(randomDir)) {
+                    uc.move(randomDir);
+                }
             }
         }
 
