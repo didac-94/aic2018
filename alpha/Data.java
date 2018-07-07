@@ -13,6 +13,8 @@ public class Data {
     int nKnightChannel;
     int nBallistaChannel;
     int nTreesChannel = 6;
+    int mainstreamChannel = 7;
+    int touchedChannel = 8;
     int nWorker;
     int nBarracks;
     int nWarrior;
@@ -24,6 +26,9 @@ public class Data {
     Team enemy;
     Direction[] dirs;
     boolean stableEconomy;
+
+    final int NEAR_RADIUS = 2;
+    final int MIN_TO_HEALTHY = GameConstants.SMALL_TREE_CHOPPING_DMG;
 
     public Data(){}
 
