@@ -18,24 +18,19 @@ public class AttackUnit {
 
     public void run() {
 
+        //Update our info according to the comm channel
         data.Update();
 
+        //Report myself
+        reportMyself();
+
         //Attack the first target you see
-        UnitInfo[] enemies = uc.senseUnits(uc.getOpponent());
-        for (UnitInfo unit : enemies) {
-            if (uc.canAttack(unit)) uc.attack(unit);
-        }
+        attack();
 
-        // Attack an oak
-        TreeInfo[] trees = uc.senseTrees();
-        for (TreeInfo tree : trees) {
-            if (tree.oak) {
-                if (uc.canAttack(tree)) {
-                    uc.attack(tree);
-                }
-            }
-        }
+        //Attack an oak
+        attackOak();
 
+        //Movement
         int codedMainstreamLocation = uc.read(data.mainstreamCh);
         Location mainstreamLoc = new Location();
         mainstreamLoc.x = codedMainstreamLocation / 10000;
@@ -64,17 +59,17 @@ public class AttackUnit {
                 mainstreamLoc.y = mainstreamCodedLocation % 10000;
                 Direction toGeneralEnemy = myLoc.directionTo(mainstreamLoc);
 
-                toGeneralEnemy = tools.Roomba(toGeneralEnemy);
+                toGeneralEnemy = tools.GeneralDir(toGeneralEnemy);
                 if (uc.canMove(toGeneralEnemy)) uc.move(toGeneralEnemy);
             } else if (uc.getRound() < 200) { // TODO: roundFirstBarraca + X
                 // Move to a random direction searching for the meaning of life
                 Direction randDir = tools.RandomDir();
-                randDir = tools.Roomba(randDir);
+                randDir = tools.GeneralDir(randDir);
                 if (uc.canMove(randDir)) uc.move(randDir);
             } else {
                 // TODO: implementar exploradors
                 Direction toEnemySpawnDir = tools.RandomDir();
-                toEnemySpawnDir = tools.Roomba(toEnemySpawnDir);
+                toEnemySpawnDir = tools.GeneralDir(toEnemySpawnDir);
                 if (uc.canMove(toEnemySpawnDir)) uc.move(toEnemySpawnDir);
             }
 
@@ -88,7 +83,7 @@ public class AttackUnit {
             // TODO: agruparnos antes de ir a partile(s) la boca
             Direction toEnemy = myLoc.directionTo(enemyLoc);
 
-            toEnemy = tools.Roomba(toEnemy);
+            toEnemy = tools.GeneralDir(toEnemy);
             if (uc.canMove(toEnemy)) uc.move(toEnemy);
 
 
@@ -96,6 +91,31 @@ public class AttackUnit {
 
         //TODO: atacar despres de moures
 
+    }
+
+    void reportMyself() {
+        // Report to the Comm Channel
+        uc.write(data.unitReportCh, uc.read(data.unitReportCh)+1);
+        // Reset Next Slot
+        uc.write(data.unitResetCh, 0);
+    }
+
+    void attack() {
+        UnitInfo[] enemies = uc.senseUnits(uc.getOpponent());
+        for (UnitInfo unit : enemies) {
+            if (uc.canAttack(unit)) uc.attack(unit);
+        }
+    }
+
+    void attackOak() {
+        TreeInfo[] trees = uc.senseTrees();
+        for (TreeInfo tree : trees) {
+            if (tree.oak) {
+                if (uc.canAttack(tree)) {
+                    uc.attack(tree);
+                }
+            }
+        }
     }
 
 }

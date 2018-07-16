@@ -20,25 +20,36 @@ public class Worker {
         //Update our info according to the comm channel
         data.Update();
 
-        //Make barracks according to economy data
-        makeBarracks();
-
         //Report myself
         reportMyself();
 
         //Report enemies around
         reportEnemies();
 
+        //Make barracks according to economy data
+        makeBarracks();
+
+        //Movement
+        move();
+
+        //Plant trees if necessary
+        plant();
+
+        //Harvest wood
+        chop();
+
+        //Gather VPs if available
+        gatherVP();
+
         //Plant some trees or make some workers
         buildEconomy();
 
-        //Movement
-        movement();
+        //if (data.loneWorker) uc.println("I'm alone");
 
     }
 
     void makeBarracks() {
-        if (data.stableEconomy && data.nBarracks < data.nWorker/3) {
+        if (data.stableEconomy && data.nBarracks < 5) {
             int randIndex = (int)(Math.random()*8);
             if (uc.canSpawn(data.dirs[randIndex], UnitType.BARRACKS)) {
                 uc.spawn(data.dirs[randIndex], UnitType.BARRACKS);
@@ -47,8 +58,83 @@ public class Worker {
         }
     }
 
+    void reportMyself() {
+        // Report to the Comm Channel
+        uc.write(data.unitReportCh, uc.read(data.unitReportCh)+1);
+        uc.write(data.workerReportCh, uc.read(data.workerReportCh)+1);
+        // Reset Next Slot
+        uc.write(data.unitResetCh, 0);
+        uc.write(data.workerResetCh, 0);
+    }
+
+    void reportEnemies() {
+        return;
+    }
+
+    void chop() {
+        if (data.loneWorker) {
+            TreeInfo[] myTrees = uc.senseTrees(2);
+            for (TreeInfo tree : myTrees) {
+                if (tools.CanChop(tree)) uc.attack(tree);
+            }
+        }
+    }
+
+    void plant() {
+        if (data.loneWorker) {
+            TreeInfo[] nearbyTrees = uc.senseTrees();
+            int nNearbyTrees = nearbyTrees.length;
+            if (nNearbyTrees < 6) {
+                for (Direction dir : data.dirs) {
+                    if (dir != Direction.ZERO) {
+                        Location targetLoc = uc.getLocation().add(dir);
+                        if (uc.canUseActiveAbility(targetLoc)) {
+                            uc.useActiveAbility(targetLoc);
+                            uc.write(data.plantedTreesCh, data.nPlantedTrees+1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void move() {
+        if (data.currentRound < 10 && !data.loneWorker) {
+            TreeInfo[] visibleTrees = uc.senseTrees();
+            int distToNearestOak = data.INF;
+            TreeInfo nearestOak = null;
+            for (TreeInfo tree : visibleTrees) {
+                if (tree.oak) {
+                    int distToTree = uc.getLocation().distanceSquared(tree.location);
+
+                    if (distToTree < distToNearestOak) {
+                        distToNearestOak = distToTree;
+                        nearestOak = tree;
+                    }
+                }
+            }
+            if (distToNearestOak != data.INF && distToNearestOak > 1) {
+                Direction dirToTree = uc.getLocation().directionTo(nearestOak.location);
+                uc.move(tools.GeneralDir(dirToTree));
+            } else {
+                data.loneWorker = true;
+            }
+        } else if (!data.loneWorker) {
+            if (tools.MatesAround(4, UnitType.WORKER) == 0) {
+                data.loneWorker = true;
+            } else {
+                uc.move(tools.GeneralDir(tools.RandomDir()));
+            }
+        }
+    }
+
+    //TODO
+    void gatherVP() {
+
+    };
+
     void buildEconomy() {
-        if (data.nPlantedTrees > 6 * data.nWorker) {
+        if ((data.nPlantedTrees > 6*data.nWorker-1 || data.growthEconomy) && data.nWorker < uc.getRound()/40) {
             Direction randomDir = tools.RandomDir();
             if (uc.canSpawn(randomDir, UnitType.WORKER)) {
                 uc.spawn(randomDir, UnitType.WORKER);
@@ -64,74 +150,6 @@ public class Worker {
             if (uc.canUseActiveAbility(randomLoc)) {
                 uc.useActiveAbility(randomLoc);
                 uc.write(data.plantedTreesCh, uc.read(data.plantedTreesCh) + 1);
-            }
-        }
-    }
-
-    void reportMyself() {
-        // Report to the Comm Channel
-        uc.write(data.unitReportCh, uc.read(data.unitReportCh)+1);
-        // Reset Next Slot
-        uc.write(data.unitResetCh, 0);
-    }
-
-    void reportEnemies() {
-        boolean enemyFoundByMates = tools.enemyFoundByMates();
-        boolean enemyFoundByMe = false;
-        if (!enemyFoundByMates) enemyFoundByMe = tools.enemyFoundByMe();
-
-        if (enemyFoundByMates) {
-            //Move in enemy direction
-            int coded_location = uc.read(uc.getInfo().getID());
-            // uc.println(coded_location);
-        }
-    }
-
-    void movement() {
-        UnitInfo[] unitsNear = uc.senseUnits(data.NEAR_RADIUS, uc.getTeam());
-        int nWorkersAround = tools.MatesAround(unitsNear, UnitType.WORKER);
-        //Check for other workers around and spread if any
-        if (nWorkersAround > 0) {
-            Direction oppDir = tools.OppositeDir(nWorkersAround, unitsNear);
-            oppDir = tools.Roomba(oppDir);
-            if (uc.canMove(oppDir)) uc.move(oppDir); // canMove irrelevant
-        } else {
-            //Else move towards the closest healthy tree in sight
-            TreeInfo visibleTrees[] = uc.senseTrees();
-            if (visibleTrees.length > 0) {
-                int closestHealthyTree = 0;
-                int distToClosestTree = 10000;
-                Location myLoc = uc.getLocation();
-
-                for (int i = 0; i < visibleTrees.length; i++) {
-                    TreeInfo tree = visibleTrees[i];
-                    if (tree.remainingGrowthTurns > 0
-                            || tree.health <= data.MIN_TREE_HEALTH
-                            || myLoc.distanceSquared(tree.location) == 0) continue;
-                    if (myLoc.distanceSquared(tree.location) < distToClosestTree) {
-                        distToClosestTree = myLoc.distanceSquared(tree.location);
-                        closestHealthyTree = i;
-                    }
-                }
-
-                TreeInfo chT = visibleTrees[closestHealthyTree];
-                Location chtPos = chT.location;
-                Direction chtDir = uc.getLocation().directionTo(chtPos);
-
-                int distToHt = uc.getLocation().distanceSquared(chtPos);
-                if (distToHt > 2) {
-                    chtDir = tools.Roomba(chtDir);
-                    if (uc.canMove(chtDir)) uc.move(chtDir);
-                } else {
-                    chtDir = tools.Roomba(chtDir);
-                    if (tools.CanChop(chT)) uc.attack(chT);
-                }
-            } else {
-                Direction randomDir = tools.RandomDir();
-                randomDir = tools.Roomba(randomDir);
-                if (uc.canMove(randomDir)) {
-                    uc.move(randomDir);
-                }
             }
         }
     }

@@ -17,36 +17,41 @@ public class Barracks {
 
     public void run() {
 
-        //Make Warriors
-        //int randIndex = (int)(Math.random()*4);
-        //UnitType type = UnitType.values()[2+randIndex];
-        //try to spawn a unit of the given type, if successful reset type.
+        //Update our info according to the comm channel
+        data.Update();
+
+        //Report myself
+        reportMyself();
+
+        //Spawn units
+        recruit();
+
+    }
+
+    void reportMyself() {
+        // Report to the Comm Channel
+        uc.write(data.barracksReportCh, uc.read(data.barracksReportCh)+1);
+        // Reset Next Slot
+        uc.write(data.barracksResetCh, 0);
+    }
+
+    void recruit() {
+        //TODO: intentar triar una bona primera direcció
         for (int i = 0; i < 8; ++i) {
-            if (uc.getRound() % 3 == 0) {
-
-                if(uc.getRound() % 113 == 0){
-                    if (uc.canSpawn(data.dirs[i], UnitType.BALLISTA)) {
-                        uc.spawn(data.dirs[i], UnitType.BALLISTA);
-                    }
-
-                }
-
-                if (uc.getRound() % 5 != 0) {
-                    if (uc.canSpawn(data.dirs[i], UnitType.WARRIOR)) {
-                        uc.spawn(data.dirs[i], UnitType.WARRIOR);
-                    }
-                } else if(uc.getRound() < 500){
+            //TODO: buscar una millor condició
+            if (data.stableEconomy) {
+                //TODO: buscar una millor composició
+                if(Math.random() < 1/3){
                     if (uc.canSpawn(data.dirs[i], UnitType.KNIGHT)) {
                         uc.spawn(data.dirs[i], UnitType.KNIGHT);
                     }
-                } else{
-                    if (uc.canSpawn(data.dirs[i], UnitType.ARCHER)) {
-                        uc.spawn(data.dirs[i], UnitType.ARCHER);
+                } else {
+                    if (uc.canSpawn(data.dirs[i], UnitType.WARRIOR)) {
+                        uc.spawn(data.dirs[i], UnitType.WARRIOR);
                     }
                 }
             }
         }
-
     }
 
 }
