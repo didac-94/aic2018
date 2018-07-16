@@ -14,6 +14,7 @@ public class Warrior extends AttackUnit {
 
     public void run() {
 
+        //Update our info according to the comm channel
         data.Update();
 
         //Move in a random direction

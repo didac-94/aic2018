@@ -6,36 +6,24 @@ public class UnitPlayer {
 
     public void run(UnitController uc) {
 
-        Data data = new Data(uc);
-
-        while (true) {
-
-            data.Update();
-
-			if (uc.getType() == UnitType.WORKER) {
-                Worker worker = new Worker(uc);
-			    worker.run();
-            } else if (uc.getType() == UnitType.BARRACKS) {
-                Barracks barracks = new Barracks(uc);
+        if (uc.getType() == UnitType.WORKER) {
+            Worker worker = new Worker(uc);
+            while (true) {
+                worker.run();
+                uc.yield(); //End of turn
+            }
+        } else if (uc.getType() == UnitType.BARRACKS) {
+            Barracks barracks = new Barracks(uc);
+            while (true) {
                 barracks.run();
-            } else {
-                AttackUnit attackUnit = new AttackUnit(uc);
+                uc.yield(); //End of turn
+            }
+        } else {
+            AttackUnit attackUnit = new AttackUnit(uc);
+            while (true) {
                 attackUnit.run();
-            } /*else if (uc.getType() == UnitType.WARRIOR){
-                Warrior warrior = new Warrior(uc);
-                warrior.run();
-            } else if (uc.getType() == UnitType.ARCHER) {
-                Archer archer = new Archer(uc);
-                archer.run();
-            } else if (uc.getType() == UnitType.KNIGHT) {
-                Knight knight = new Knight(uc);
-                knight.run();
-            } else if (uc.getType() == UnitType.BALLISTA) {
-                Ballista ballista = new Ballista(uc);
-                ballista.run();
-            }*/
-
-            uc.yield(); //End of turn
+                uc.yield(); //End of turn
+            }
         }
 
     }

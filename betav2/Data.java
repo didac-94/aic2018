@@ -30,7 +30,6 @@ public class Data {
     int ballistaResetCh;        // Ch 18, 19, 20
     int plantedTreesCh = 21;    // Ch 21
     int mainstreamCh = 22;      // Ch 22
-    int touchedCh = 23;         // Ch 23
 
     // Comm Info
     int nUnits;
@@ -42,36 +41,45 @@ public class Data {
     int nBallista;
     int nPlantedTrees;
 
-
+    //Random Info
     Team ally;
     Team enemy;
     Direction[] dirs;
     UnitType[] types;
     int currentRound;
-    boolean stableEconomy;
 
-    final int treeCap = 55;
+    //Parameters
+    boolean poorEconomy;
+    boolean growthEconomy;
+    boolean stableEconomy;
+    boolean richEconomy;
+    boolean loneWorker;
+    final int INF = Integer.MAX_VALUE;
     final int NEAR_RADIUS = 2;
     final int MIN_TREE_HEALTH = GameConstants.SMALL_TREE_CHOPPING_DMG;
 
     public Data(){}
 
     public Data(UnitController _uc) {
-
         uc = _uc;
         ally = uc.getTeam();
         enemy = uc.getOpponent();
         dirs = Direction.values();
         types = UnitType.values();
         currentRound = uc.getRound();
+        loneWorker = false;
     }
 
     public void Update() {
 
+        //Update economy stats
+        poorEconomy = (uc.getResources() < 300);
+        growthEconomy = (uc.getResources() > 200)&&(poorEconomy);
         stableEconomy = (uc.getResources() > 500);
-        currentRound = uc.getRound();
+        richEconomy = (uc.getResources() > 1000);
 
         // Update Comm Channels
+        currentRound = uc.getRound();
         int x = currentRound%3;
         int y = (currentRound+1)%3;
         int z = (currentRound+2)%3;

@@ -30,13 +30,12 @@ public class Tools {
                 && data.uc.getLocation() != loc;
     }
 
-    // Pre: UnitInfo[] unitsNear = uc.senseUnits(data.NEAR_RADIUS, uc.getTeam());
-    // Post: Returns the # of workers in a squared radius of NEAR_RADIUS.
-    public int MatesAround(UnitInfo[] unitsNear, UnitType type) {
+    //Returns the # of allies of a given type in a squared radius of radius.
+    public int MatesAround(int radius, UnitType type) {
+        UnitInfo[] unitsNear = data.uc.senseUnits(radius, data.ally);
         int i = 0;
         for (UnitInfo unit : unitsNear)
-            if (unit.getType() == type)
-                unitsNear[i++] = unit;
+            if (unit.getType() == type) i++;
         return i;
     }
 
@@ -50,24 +49,6 @@ public class Tools {
         while (!data.uc.canMove(toWorkerDir.opposite()) && worker < nWorkers);
         if (!data.uc.canMove(toWorkerDir.opposite())) toWorkerDir = RandomDir();
         return toWorkerDir.opposite();
-    }
-
-    // TODO: mirar si la loc que tens tu esta mes a prop que la que et diuen els colegas
-    // Post: escriu al vector comú, a la teva ID, la location d'un enemic
-    public boolean enemyFoundByMates() {
-        UnitController uc = data.uc;
-        UnitInfo[] unitsNear = uc.senseUnits(data.NEAR_RADIUS, uc.getTeam());
-        for (int i = 0; i < unitsNear.length; ++i) {
-            int mateID = unitsNear[i].getID();
-            // Si hi ha un enemic, jo ho comunico tambe
-            // (Tècnica Nazi. (Sigo ordenes))
-            if (uc.read(mateID) > 0) {
-                uc.write(uc.getInfo().getID(), uc.read(mateID));
-                return true;
-            }
-        }
-
-        return false;
     }
 
     // TODO: mirar igualmente aunque los colegas ya tengan un sitio
@@ -88,7 +69,7 @@ public class Tools {
     }
 
     //Return a general direction towards the favourite direction
-    public Direction Roomba(Direction favDir){
+    public Direction GeneralDir(Direction favDir){
         UnitController uc = data.uc;
         for (int k = 0; k < 8 && !uc.canMove(favDir); ++k) {
             if (k%2 == 0) for (int j = 0; j < k; ++j) favDir = favDir.rotateLeft();
