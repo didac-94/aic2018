@@ -1,4 +1,4 @@
-package betav2;
+package betav1;
 
 import aic2018.*;
 
@@ -31,10 +31,49 @@ public class AttackUnit {
         attackOak();
 
         //Movement
+        move();
+
+        //Try to attack after movement
+        attack();
+        attackOak();
+
+    }
+
+    void reportMyself() {
+        // Report to the Comm Channel
+        uc.write(data.unitReportCh, uc.read(data.unitReportCh)+1);
+        // Reset Next Slot
+        uc.write(data.unitResetCh, 0);
+    }
+
+    void reportEnemies() {
+
+    }
+
+    void attack() {
+        UnitInfo[] enemies = uc.senseUnits(uc.getOpponent());
+        for (UnitInfo unit : enemies) {
+            if (uc.canAttack(unit)) uc.attack(unit);
+        }
+    }
+
+    void attackOak() {
+        TreeInfo[] trees = uc.senseTrees();
+        for (TreeInfo tree : trees) {
+            if (tree.oak) {
+                if (uc.canAttack(tree)) {
+                    uc.attack(tree);
+                }
+            }
+        }
+    }
+
+    void move() {
         int codedMainstreamLocation = uc.read(data.mainstreamCh);
         Location mainstreamLoc = new Location();
         mainstreamLoc.x = codedMainstreamLocation / 10000;
         mainstreamLoc.y = codedMainstreamLocation % 10000;
+        //mainstreamLoc = data.enemy.getInitialLocations()[0];
 
         if (uc.getLocation().distanceSquared(mainstreamLoc) <= data.NEAR_RADIUS) {
             uc.write(data.mainstreamCh, 0);
@@ -87,34 +126,6 @@ public class AttackUnit {
             if (uc.canMove(toEnemy)) uc.move(toEnemy);
 
 
-        }
-
-        //TODO: atacar despres de moures
-
-    }
-
-    void reportMyself() {
-        // Report to the Comm Channel
-        uc.write(data.unitReportCh, uc.read(data.unitReportCh)+1);
-        // Reset Next Slot
-        uc.write(data.unitResetCh, 0);
-    }
-
-    void attack() {
-        UnitInfo[] enemies = uc.senseUnits(uc.getOpponent());
-        for (UnitInfo unit : enemies) {
-            if (uc.canAttack(unit)) uc.attack(unit);
-        }
-    }
-
-    void attackOak() {
-        TreeInfo[] trees = uc.senseTrees();
-        for (TreeInfo tree : trees) {
-            if (tree.oak) {
-                if (uc.canAttack(tree)) {
-                    uc.attack(tree);
-                }
-            }
         }
     }
 

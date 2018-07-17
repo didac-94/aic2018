@@ -1,4 +1,4 @@
-package betav2;
+package betav1;
 
 import aic2018.*;
 
@@ -20,14 +20,8 @@ public class Worker {
         //Update our info according to the comm channel
         data.Update();
 
-        //Report myself
-        reportMyself();
-
-        //Report enemies around
-        reportEnemies();
-
-        //Make barracks according to economy data
-        makeBarracks();
+        //Report to Comm Channel
+        report();
 
         //Movement
         move();
@@ -45,17 +39,14 @@ public class Worker {
         buildEconomy();
 
         //if (data.loneWorker) uc.println("I'm alone");
+        if (data.setWorker) uc.println("I'm set");
 
     }
 
-    void makeBarracks() {
-        if (data.stableEconomy && data.nBarracks < 5) {
-            int randIndex = (int)(Math.random()*8);
-            if (uc.canSpawn(data.dirs[randIndex], UnitType.BARRACKS)) {
-                uc.spawn(data.dirs[randIndex], UnitType.BARRACKS);
-                uc.write(data.barracksCh, data.nBarracks + 1);
-            }
-        }
+    void report() {
+        reportMyself();
+        reportTrees();
+        reportEnemies();
     }
 
     void reportMyself() {
@@ -68,7 +59,15 @@ public class Worker {
     }
 
     void reportEnemies() {
-        return;
+
+    }
+
+    void reportTrees() {
+        if (data.loneWorker) {
+            int nTreesAround = uc.senseTrees(2).length;
+            uc.write(data.treeReportCh, uc.read(data.treeReportCh)+nTreesAround);
+            uc.write(data.treeResetCh, 0);
+        }
     }
 
     void chop() {
@@ -82,7 +81,7 @@ public class Worker {
 
     void plant() {
         if (data.loneWorker) {
-            TreeInfo[] nearbyTrees = uc.senseTrees();
+            TreeInfo[] nearbyTrees = uc.senseTrees(2);
             int nNearbyTrees = nearbyTrees.length;
             if (nNearbyTrees < 6) {
                 for (Direction dir : data.dirs) {
@@ -91,9 +90,18 @@ public class Worker {
                         if (uc.canUseActiveAbility(targetLoc)) {
                             uc.useActiveAbility(targetLoc);
                             uc.write(data.plantedTreesCh, data.nPlantedTrees+1);
+                            break;
                         }
+                    } else if (uc.getResources() >= 180){
+                        uc.write(data.setWorkerReportCh, uc.read(data.setWorkerReportCh)+1);
+                        uc.write(data.setWorkerResetCh, 0);
+                        data.setWorker = true;
                     }
                 }
+            } else {
+                uc.write(data.setWorkerReportCh, uc.read(data.setWorkerReportCh)+1);
+                uc.write(data.setWorkerResetCh, 0);
+                data.setWorker = true;
             }
         }
     }
@@ -106,7 +114,6 @@ public class Worker {
             for (TreeInfo tree : visibleTrees) {
                 if (tree.oak) {
                     int distToTree = uc.getLocation().distanceSquared(tree.location);
-
                     if (distToTree < distToNearestOak) {
                         distToNearestOak = distToTree;
                         nearestOak = tree;
@@ -114,8 +121,9 @@ public class Worker {
                 }
             }
             if (distToNearestOak != data.INF && distToNearestOak > 1) {
-                Direction dirToTree = uc.getLocation().directionTo(nearestOak.location);
-                uc.move(tools.GeneralDir(dirToTree));
+                tools.MoveTo(nearestOak.location);
+                //Direction dirToTree = uc.getLocation().directionTo(nearestOak.location);
+                //uc.move(tools.GeneralDir(dirToTree));
             } else {
                 data.loneWorker = true;
             }
@@ -123,7 +131,12 @@ public class Worker {
             if (tools.MatesAround(4, UnitType.WORKER) == 0) {
                 data.loneWorker = true;
             } else {
-                uc.move(tools.GeneralDir(tools.RandomDir()));
+                Location away = tools.Barycenter(UnitType.WORKER);
+                away.x = 2*uc.getLocation().x - away.x;
+                away.y = 2*uc.getLocation().y - away.y;
+                if (away != uc.getLocation()) {
+                    tools.MoveTo(away);
+                } else uc.move(tools.GeneralDir(tools.RandomDir()));
             }
         }
     }
@@ -134,22 +147,21 @@ public class Worker {
     };
 
     void buildEconomy() {
-        if ((data.nPlantedTrees > 6*data.nWorker-1 || data.growthEconomy) && data.nWorker < uc.getRound()/40) {
+        //Create workers to keep production
+        if ((data.nTrees > 6*data.nWorker-1 || data.growthEconomy) && (double)data.nSetWorker/(double)data.nWorker > 0.9 ) {
             Direction randomDir = tools.RandomDir();
             if (uc.canSpawn(randomDir, UnitType.WORKER)) {
                 uc.spawn(randomDir, UnitType.WORKER);
                 uc.write(data.workerCh, uc.read(data.workerCh) + 1);
             }
-        } else {
-            int randomNum = (int) (Math.random() * 8);
-            Direction randomDir = data.dirs[randomNum];
-            Location randomLoc = new Location();
-            randomLoc.x = uc.getLocation().x + randomDir.dx;
-            randomLoc.y = uc.getLocation().y + randomDir.dy;
-            //Plant a tree
-            if (uc.canUseActiveAbility(randomLoc)) {
-                uc.useActiveAbility(randomLoc);
-                uc.write(data.plantedTreesCh, uc.read(data.plantedTreesCh) + 1);
+        }
+        //Make barracks according to economy data
+        if (data.stableEconomy && data.nBarracks <= data.nUnits/10) {
+            TreeInfo[] adjacentTrees = uc.senseTrees(2);
+            int randIndex = (int) (Math.random()*8);
+            if (uc.canSpawn(data.dirs[randIndex], UnitType.BARRACKS)) {
+                uc.spawn(data.dirs[randIndex], UnitType.BARRACKS);
+                uc.write(data.barracksCh, data.nBarracks + 1);
             }
         }
     }
