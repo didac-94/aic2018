@@ -1,4 +1,4 @@
-package betav2;
+package betav1;
 
 import aic2018.*;
 
@@ -28,8 +28,15 @@ public class Data {
     int ballistaCh;             // Ch 18, 19, 20
     int ballistaReportCh;       // Ch 18, 19, 20
     int ballistaResetCh;        // Ch 18, 19, 20
-    int plantedTreesCh = 21;    // Ch 21
-    int mainstreamCh = 22;      // Ch 22
+    int treeReportCh;           // Ch 21, 22, 23
+    int treeResetCh;            // Ch 21, 22, 23
+    int treeCh;                 // Ch 21, 22, 23
+    int setWorkerReportCh;      // Ch 24, 25, 26
+    int setWorkerResetCh;       // Ch 24, 25, 26
+    int setWorkerCh;            // Ch 24, 25, 26
+    //TODO: center of mass of the workers
+    int plantedTreesCh = 27;    // Ch 27
+    int mainstreamCh = 28;      // Ch 28
 
     // Comm Info
     int nUnits;
@@ -39,6 +46,8 @@ public class Data {
     int nArcher;
     int nKnight;
     int nBallista;
+    int nTrees;
+    int nSetWorker;
     int nPlantedTrees;
 
     //Random Info
@@ -54,6 +63,7 @@ public class Data {
     boolean stableEconomy;
     boolean richEconomy;
     boolean loneWorker;
+    boolean setWorker;
     final int INF = Integer.MAX_VALUE;
     final int NEAR_RADIUS = 2;
     final int MIN_TREE_HEALTH = GameConstants.SMALL_TREE_CHOPPING_DMG;
@@ -68,6 +78,7 @@ public class Data {
         types = UnitType.values();
         currentRound = uc.getRound();
         loneWorker = false;
+        setWorker = false;
     }
 
     public void Update() {
@@ -104,6 +115,12 @@ public class Data {
         ballistaReportCh = 18 + x;
         ballistaResetCh = 18 + y;
         ballistaCh = 18 + z;
+        treeReportCh = 21 + x;
+        treeResetCh = 21 + y;
+        treeCh = 21 + z;
+        setWorkerReportCh = 24 + x;
+        setWorkerResetCh = 24 + y;
+        setWorkerCh = 24 + z;
 
         // Fetch Comm Info
         nUnits = uc.read(UnitsCh);
@@ -113,6 +130,8 @@ public class Data {
         nArcher = uc.read(archerCh);
         nKnight = uc.read(knightCh);
         nBallista = uc.read(ballistaCh);
+        nTrees = uc.read(treeCh);
+        nSetWorker = uc.read(setWorkerCh);
         nPlantedTrees = uc.read(plantedTreesCh);
 
     }
