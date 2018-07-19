@@ -1,6 +1,7 @@
-package betav1;
+package betav2;
 
-import aic2018.*;
+import aic2018.UnitController;
+import aic2018.UnitType;
 
 public class UnitPlayer {
 

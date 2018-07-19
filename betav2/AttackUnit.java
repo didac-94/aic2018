@@ -1,4 +1,4 @@
-package betav1;
+package betav2;
 
 import aic2018.*;
 
@@ -24,11 +24,8 @@ public class AttackUnit {
         //Report myself
         reportMyself();
 
-        //Attack the first target you see
+        //Try to attack
         attack();
-
-        //Attack an oak
-        attackOak();
 
         //Movement
         move();
@@ -69,14 +66,27 @@ public class AttackUnit {
     }
 
     void move() {
-        int codedMainstreamLocation = uc.read(data.mainstreamCh);
+        Location target = new Location(0,0);
+        if (uc.getRound() < 1000 && data.enemyOnSight == 0) {
+            Location enemyBase = tools.Barycenter(data.enemyTeam.getInitialLocations());
+            Location allyBase = new Location(data.workerX/data.nWorker,data.workerY/data.nWorker);
+            target = tools.BarCoord(new Location[] {enemyBase, allyBase}, new int[] {1,3});
+        } else {
+            target = tools.Decrypt(data.enemyLoc);
+        }
+        tools.MoveTo(target);
+    }
+
+    void move2() {
+
+        int codedMainstreamLocation = uc.read(data.enemyOnSightCh);
         Location mainstreamLoc = new Location();
         mainstreamLoc.x = codedMainstreamLocation / 10000;
         mainstreamLoc.y = codedMainstreamLocation % 10000;
-        //mainstreamLoc = data.enemy.getInitialLocations()[0];
+        //mainstreamLoc = data.enemyTeam.getInitialLocations()[0];
 
         if (uc.getLocation().distanceSquared(mainstreamLoc) <= data.NEAR_RADIUS) {
-            uc.write(data.mainstreamCh, 0);
+            uc.write(data.enemyOnSightCh, 0);
         }
 
         // Intento buscar enemics per la meva part
@@ -88,11 +98,11 @@ public class AttackUnit {
         //if (!enemyFoundByMe) enemyFoundByMates = tools.enemyFoundByMates();
 
 
-        // TODO: go to the general direction of the enemy or to allies
+        // TODO: go to the general direction of the enemyTeam or to allies
         Location myLoc = uc.getLocation();
-        int mainstreamCodedLocation = uc.read(data.mainstreamCh);
+        int mainstreamCodedLocation = uc.read(data.enemyOnSightCh);
 
-        if (uc.read(uc.getInfo().getID()) == 0) {
+        if (uc.read(1000 + uc.getInfo().getID()) == 0) {
             if (mainstreamCodedLocation > 0) {
                 mainstreamLoc.x = mainstreamCodedLocation / 10000;
                 mainstreamLoc.y = mainstreamCodedLocation % 10000;
@@ -100,7 +110,7 @@ public class AttackUnit {
 
                 toGeneralEnemy = tools.GeneralDir(toGeneralEnemy);
                 if (uc.canMove(toGeneralEnemy)) uc.move(toGeneralEnemy);
-            } else if (uc.getRound() < 200) { // TODO: roundFirstBarraca + X
+            } else if (uc.getRound() < 500) { // TODO: roundFirstBarraca + X
                 // Move to a random direction searching for the meaning of life
                 Direction randDir = tools.RandomDir();
                 randDir = tools.GeneralDir(randDir);
@@ -113,8 +123,8 @@ public class AttackUnit {
             }
 
         } else {
-            //Move in enemy direction
-            int coded_location = uc.read(uc.getInfo().getID());
+            //Move in enemyTeam direction
+            int coded_location = uc.read(1000 + uc.getInfo().getID());
 
             Location enemyLoc = new Location();
             enemyLoc.x = coded_location/10000;
