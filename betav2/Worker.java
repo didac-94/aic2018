@@ -1,4 +1,4 @@
-package betav1;
+package betav2;
 
 import aic2018.*;
 
@@ -38,10 +38,14 @@ public class Worker {
         //Plant some trees or make some workers
         buildEconomy();
 
+        //Buy VPs if too much money or near the end
+        buyVP();
+
         //if (data.loneWorker) uc.println("I'm alone");
-        if (data.setWorker) uc.println("I'm set");
+        //if (data.setWorker) uc.println("I'm set");
 
     }
+
 
     void report() {
         reportMyself();
@@ -53,9 +57,13 @@ public class Worker {
         // Report to the Comm Channel
         uc.write(data.unitReportCh, uc.read(data.unitReportCh)+1);
         uc.write(data.workerReportCh, uc.read(data.workerReportCh)+1);
+        uc.write(data.workerXReportCh, uc.read(data.workerXReportCh) + uc.getLocation().x);
+        uc.write(data.workerYReportCh, uc.read(data.workerYReportCh) + uc.getLocation().y);
         // Reset Next Slot
         uc.write(data.unitResetCh, 0);
         uc.write(data.workerResetCh, 0);
+        uc.write(data.workerXResetCh, 0);
+        uc.write(data.workerYResetCh, 0);
     }
 
     void reportEnemies() {
@@ -107,6 +115,8 @@ public class Worker {
     }
 
     void move() {
+        //Early  in the game look for nearby oaks
+        //TODO: do it early in the lifetime of each worker
         if (data.currentRound < 10 && !data.loneWorker) {
             TreeInfo[] visibleTrees = uc.senseTrees();
             int distToNearestOak = data.INF;
@@ -122,11 +132,10 @@ public class Worker {
             }
             if (distToNearestOak != data.INF && distToNearestOak > 1) {
                 tools.MoveTo(nearestOak.location);
-                //Direction dirToTree = uc.getLocation().directionTo(nearestOak.location);
-                //uc.move(tools.GeneralDir(dirToTree));
             } else {
                 data.loneWorker = true;
             }
+        //If not isolated try to flee friendly workers
         } else if (!data.loneWorker) {
             if (tools.MatesAround(4, UnitType.WORKER) == 0) {
                 data.loneWorker = true;
@@ -134,34 +143,69 @@ public class Worker {
                 Location away = tools.Barycenter(UnitType.WORKER);
                 away.x = 2*uc.getLocation().x - away.x;
                 away.y = 2*uc.getLocation().y - away.y;
-                if (away != uc.getLocation()) {
+                if (!away.isEqual(uc.getLocation()) && uc.isAccessible(away)) {
                     tools.MoveTo(away);
                 } else uc.move(tools.GeneralDir(tools.RandomDir()));
             }
         }
     }
 
-    //TODO
     void gatherVP() {
-
+        tools.GatherVP();
     };
 
-    void buildEconomy() {
-        //Create workers to keep production
-        if ((data.nTrees > 6*data.nWorker-1 || data.growthEconomy) && (double)data.nSetWorker/(double)data.nWorker > 0.9 ) {
-            Direction randomDir = tools.RandomDir();
-            if (uc.canSpawn(randomDir, UnitType.WORKER)) {
-                uc.spawn(randomDir, UnitType.WORKER);
-                uc.write(data.workerCh, uc.read(data.workerCh) + 1);
+    void buyVP() {
+        if (data.overflowingEconomy || uc.getRound() > 1800) {
+            if (uc.canBuyVP(1)) uc.buyVP(1);
+        }
+    }
+
+    void buildBarracks() {
+        //Choose direction to avoid trees
+        Direction[] allowedDir = data.dirs;
+        TreeInfo[] nearbyTrees = uc.senseTrees(2);
+        for (TreeInfo tree : nearbyTrees) {
+            for (int i = 0; i < 8; i++) {
+                Direction dir = allowedDir[i];
+                if (dir != null) {
+                    Location loc = uc.getLocation().add(dir);
+                    if (tree.location.isEqual(loc) || !uc.isAccessible(loc)) allowedDir[i] = null;
+                }
             }
         }
-        //Make barracks according to economy data
-        if (data.stableEconomy && data.nBarracks <= data.nUnits/10) {
-            TreeInfo[] adjacentTrees = uc.senseTrees(2);
-            int randIndex = (int) (Math.random()*8);
-            if (uc.canSpawn(data.dirs[randIndex], UnitType.BARRACKS)) {
-                uc.spawn(data.dirs[randIndex], UnitType.BARRACKS);
-                uc.write(data.barracksCh, data.nBarracks + 1);
+        Direction chosenDir = null;
+        for (Direction dir : allowedDir) {
+            if (dir != null) {
+                chosenDir = dir;
+                break;
+            }
+        }
+        //Spawn in said direction
+        if (uc.canSpawn(chosenDir, UnitType.BARRACKS)) {
+            uc.spawn(chosenDir, UnitType.BARRACKS);
+        }
+    }
+
+    void spawnWorker() {
+        Direction randomDir = tools.RandomDir();
+        if (uc.canSpawn(randomDir, UnitType.WORKER)) {
+            uc.spawn(randomDir, UnitType.WORKER);
+            uc.write(data.workerCh, uc.read(data.workerCh) + 1);
+        }
+    }
+
+    void buildEconomy() {
+        //Only spawn new units in light pop density areas to maximize expansion
+        if (tools.MatesAround(GameConstants.WORKER_SIGHT_RANGE_SQUARED, UnitType.WORKER) < 4) {
+            //Create workers to keep production
+            if ((data.nTrees > 6 * data.nWorker - 1 || data.growthEconomy)
+                    && (double) data.nSetWorker / (double) data.nWorker > 0.8
+                    && uc.getRound() < 1800) {
+                spawnWorker();
+            }
+            //Make barracks according to economy data
+            if (data.stableEconomy && data.nBarracks <= data.nUnits / 10) {
+                buildBarracks();
             }
         }
     }

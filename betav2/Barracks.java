@@ -1,6 +1,7 @@
-package betav1;
+package betav2;
 
-import aic2018.*;
+import aic2018.UnitController;
+import aic2018.UnitType;
 
 public class Barracks {
 
@@ -39,9 +40,9 @@ public class Barracks {
         //TODO: intentar triar una bona primera direcció
         for (int i = 0; i < 8; ++i) {
             //TODO: buscar una millor condició
-            if (data.stableEconomy) {
+            if (data.stableEconomy && data.nAttackUnit < 2000) {
                 //TODO: buscar una millor composició
-                if(Math.random() < 1/3){
+                if(Math.random() < 0.1){
                     if (uc.canSpawn(data.dirs[i], UnitType.KNIGHT)) {
                         uc.spawn(data.dirs[i], UnitType.KNIGHT);
                     }

@@ -1,4 +1,4 @@
-package betav1;
+package betav2;
 
 import aic2018.*;
 
@@ -34,9 +34,16 @@ public class Data {
     int setWorkerReportCh;      // Ch 24, 25, 26
     int setWorkerResetCh;       // Ch 24, 25, 26
     int setWorkerCh;            // Ch 24, 25, 26
-    //TODO: center of mass of the workers
-    int plantedTreesCh = 27;    // Ch 27
-    int mainstreamCh = 28;      // Ch 28
+    int workerXReportCh;        // Ch 27, 28, 29
+    int workerXResetCh;         // Ch 27, 28, 29
+    int workerXCh;              // Ch 27, 28, 29
+    int workerYReportCh;        // Ch 30, 31, 32
+    int workerYResetCh;         // Ch 30, 31, 32
+    int workerYCh;              // Ch 30, 31, 32
+    int plantedTreesCh = 50;    // Ch 50
+    int enemyOnSightCh = 51;    // Ch 51
+    int enemyLocCh = 52;        // Ch 52
+    int workerBarycenterCh = 53;// Ch 53
 
     // Comm Info
     int nUnits;
@@ -49,10 +56,16 @@ public class Data {
     int nTrees;
     int nSetWorker;
     int nPlantedTrees;
+    int nAttackUnit;
+    int workerX;
+    int workerY;
+    int workerBarycenter;
+    int enemyOnSight;
+    int enemyLoc;
 
     //Random Info
     Team ally;
-    Team enemy;
+    Team enemyTeam;
     Direction[] dirs;
     UnitType[] types;
     int currentRound;
@@ -62,6 +75,7 @@ public class Data {
     boolean growthEconomy;
     boolean stableEconomy;
     boolean richEconomy;
+    boolean overflowingEconomy;
     boolean loneWorker;
     boolean setWorker;
     final int INF = Integer.MAX_VALUE;
@@ -73,10 +87,12 @@ public class Data {
     public Data(UnitController _uc) {
         uc = _uc;
         ally = uc.getTeam();
-        enemy = uc.getOpponent();
+        enemyTeam = uc.getOpponent();
         dirs = Direction.values();
         types = UnitType.values();
         currentRound = uc.getRound();
+
+        //Worker variables
         loneWorker = false;
         setWorker = false;
     }
@@ -88,6 +104,7 @@ public class Data {
         growthEconomy = (uc.getResources() > 200)&&(poorEconomy);
         stableEconomy = (uc.getResources() > 500);
         richEconomy = (uc.getResources() > 1000);
+        overflowingEconomy = (uc.getResources() > 2000);
 
         // Update Comm Channels
         currentRound = uc.getRound();
@@ -121,6 +138,12 @@ public class Data {
         setWorkerReportCh = 24 + x;
         setWorkerResetCh = 24 + y;
         setWorkerCh = 24 + z;
+        workerXReportCh = 27 + x;
+        workerXResetCh = 27 + y;
+        workerXCh = 27 + z;
+        workerYReportCh = 30 + x;
+        workerYResetCh = 30 + y;
+        workerYCh = 30 + z;
 
         // Fetch Comm Info
         nUnits = uc.read(UnitsCh);
@@ -133,6 +156,17 @@ public class Data {
         nTrees = uc.read(treeCh);
         nSetWorker = uc.read(setWorkerCh);
         nPlantedTrees = uc.read(plantedTreesCh);
+        nAttackUnit = nUnits - nWorker;
+        workerX = uc.read(workerXCh);
+        workerY = uc.read(workerYCh);
+        workerBarycenter = uc.read(workerBarycenterCh);
+        enemyOnSight = uc.read(enemyOnSightCh);
+        enemyLoc = uc.read(enemyLocCh);
+
+        if (currentRound == 1) {
+            enemyLoc = enemyTeam.getInitialLocations()[0].x*1000 + enemyTeam.getInitialLocations()[0].y;
+            uc.write(enemyLocCh, enemyLoc);
+        }
 
     }
 

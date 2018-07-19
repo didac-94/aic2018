@@ -1,4 +1,4 @@
-package betav1;
+package betav2;
 
 import aic2018.*;
 
@@ -30,7 +30,7 @@ public class Tools {
 
         boolean rotateRight = true; //if I should rotate right or left
         Location lastObstacleFound = null; //latest obstacle I've found in my way
-        int minDistToEnemy = INF; //minimum distance I've been to the enemy while going around an obstacle
+        int minDistToEnemy = INF; //minimum distance I've been to the enemyTeam while going around an obstacle
         Location prevTarget = null; //previous target
 
         void moveTo(Location target){
@@ -130,12 +130,36 @@ public class Tools {
         return b;
     }
 
+    //Returns the location with barycentric coord x in the barycentric reference B
+    Location BarCoord(Location[] B, int[] coord) {
+        int s = 0;
+        Location R = new Location(0,0);
+        for (int i = 0; i < B.length; i++) {
+            s += coord[i];
+            R.x = R.x + coord[i]*B[i].x;
+            R.y = R.y + coord[i]*B[i].y;
+        }
+        R.x = R.x/s;
+        R.y = R.y/s;
+        return R;
+    }
+
+    //Turn a pair of coordinates into an integer
+    public int Encrypt(int x, int y) {
+        return x*1000 + y;
+    }
+
+    //Decrypt a location from an integer
+    public Location Decrypt(int n) {
+        return new Location(n/1000, n%1000);
+    }
+
     //True if no units are in that location
     public boolean NoFriendlyUnitsAt(Location loc) {
-        if (data.uc.getLocation() == loc) return false;
+        if (data.uc.getLocation().isEqual(loc)) return false;
         UnitInfo[] nearbyAllies = data.uc.senseUnits(data.ally);
         for (UnitInfo unit : nearbyAllies) {
-            if (unit.getLocation() == loc) return false;
+            if (unit.getLocation().isEqual(loc)) return false;
         }
         return true;
     }
@@ -148,6 +172,15 @@ public class Tools {
                 && NoFriendlyUnitsAt(tree.location);
     }
 
+    public void GatherVP() {
+        for (Direction dir : data.dirs) {
+            Location loc = data.uc.getLocation().add(dir);
+            if (data.uc.isAccessible(loc) && data.uc.senseVPsAtLocation(loc).getVictoryPoints() > 0) {
+                if (data.uc.canGatherVPs(dir)) data.uc.gatherVPs(dir);
+            }
+        }
+    }
+
     //Returns the # of allies of a given type in a squared radius
     public int MatesAround(int radius, UnitType type) {
         UnitInfo[] unitsNear = data.uc.senseUnits(radius, data.ally);
@@ -155,18 +188,6 @@ public class Tools {
         for (UnitInfo unit : unitsNear)
             if (unit.getType() == type) i++;
         return i;
-    }
-
-    // Pre: nWorkers > 0. # workers in a near radius.
-    public Direction OppositeDir(int nWorkers, UnitInfo[] workersNear) {
-        Location myLoc = data.uc.getLocation();
-        int worker = 0; // we begin with the first one
-        Direction toWorkerDir;
-
-        do toWorkerDir = myLoc.directionTo(workersNear[worker++].getLocation());
-        while (!data.uc.canMove(toWorkerDir.opposite()) && worker < nWorkers);
-        if (!data.uc.canMove(toWorkerDir.opposite())) toWorkerDir = RandomDir();
-        return toWorkerDir.opposite();
     }
 
     // TODO: mirar igualmente aunque los colegas ya tengan un sitio
@@ -177,11 +198,11 @@ public class Tools {
             // TODO: no coger el primero
             Location enemyLoc = enemiesNear[0].getLocation();
             int coded_location = enemyLoc.x * 10000 + enemyLoc.y;
-            uc.write(uc.getInfo().getID(), coded_location);
-            uc.write(data.mainstreamCh, coded_location);
+            uc.write(1000 + uc.getInfo().getID(), coded_location);
+            uc.write(data.enemyOnSightCh, coded_location);
             return true;
         } else {
-            uc.write(uc.getInfo().getID(), 0);
+            uc.write(1000 + uc.getInfo().getID(), 0);
         }
         return false;
     }
