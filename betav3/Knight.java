@@ -50,10 +50,12 @@ public class Knight extends AttackUnit {
         Location target;
         if (data.enemyFound == 1) {
             target = tools.Decrypt(data.enemyLoc);
+        } else if (data.isScout) {
+            target = data.enemyBases[data.firstEnemyBase];
         } else if (data.currentRound < 600) {
             Location enemyBase = tools.Barycenter(data.enemyBases);
             Location allyBase = new Location(data.workerX/data.nWorker,data.workerY/data.nWorker);
-            target = tools.BarCoord(new Location[] {enemyBase, allyBase}, new int[] {3,1});
+            target = tools.BarCoord(new Location[] {enemyBase, allyBase}, new int[] {1,3});
         } else {
             target = data.enemyBases[data.firstEnemyBase];
         }

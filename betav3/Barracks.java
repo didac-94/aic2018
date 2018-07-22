@@ -1,9 +1,6 @@
 package betav3;
 
-import aic2018.Location;
-import aic2018.UnitController;
-import aic2018.UnitInfo;
-import aic2018.UnitType;
+import aic2018.*;
 
 public class Barracks {
 
@@ -67,17 +64,17 @@ public class Barracks {
 
     void recruit() {
         //TODO: intentar triar una bona primera direcció
-        for (int i = 0; i < 8; ++i) {
+        for (Direction dir : data.dirs) {
             //TODO: buscar una millor condició
-            if (data.stableEconomy && data.nAttackUnit < 2000) {
+            if (data.stableEconomy && data.nAttackUnit < 250) {
                 //TODO: buscar una millor composició
-                if(Math.random() < 0.1){
-                    if (uc.canSpawn(data.dirs[i], UnitType.KNIGHT)) {
-                        uc.spawn(data.dirs[i], UnitType.KNIGHT);
+                if(data.nKnight < 2 || Math.random() < 0.1){
+                    if (uc.canSpawn(dir, UnitType.KNIGHT)) {
+                        uc.spawn(dir, UnitType.KNIGHT);
                     }
                 } else {
-                    if (uc.canSpawn(data.dirs[i], UnitType.WARRIOR)) {
-                        uc.spawn(data.dirs[i], UnitType.WARRIOR);
+                    if (uc.canSpawn(dir, UnitType.WARRIOR)) {
+                        uc.spawn(dir, UnitType.WARRIOR);
                     }
                 }
             }

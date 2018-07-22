@@ -40,10 +40,13 @@ public class Data {
     int workerYReportCh;        // Ch 30, 31, 32
     int workerYResetCh;         // Ch 30, 31, 32
     int workerYCh;              // Ch 30, 31, 32
+    int scoutReportCh;          // Ch 33, 34, 35
+    int scoutResetCh;           // Ch 33, 34, 35
+    int scoutCh;                // Ch 33, 34, 35
     int plantedTreesCh = 50;    // Ch 50
     int enemyFoundCh = 51;      // Ch 51
     int enemyLocCh = 52;        // Ch 52
-    int workerBarycenterCh = 53;// Ch 53
+    int workerBarycenterCh = 54;// Ch 54
     int firstEnemyBaseCh = 99;  // Ch 99
     int enemyBase0Ch = 100;     // Ch 100+
 
@@ -59,6 +62,7 @@ public class Data {
     int nSetWorker;
     int nPlantedTrees;
     int nAttackUnit;
+    int nScout;
     int workerX;
     int workerY;
     int workerBarycenter;
@@ -76,6 +80,8 @@ public class Data {
     int currentRound;
 
     //Parameters
+    final int INF = Integer.MAX_VALUE;
+    final int minimumTreeHealth = GameConstants.SMALL_TREE_CHOPPING_DMG;
     boolean poorEconomy;
     boolean growthEconomy;
     boolean stableEconomy;
@@ -83,8 +89,7 @@ public class Data {
     boolean overflowingEconomy;
     boolean loneWorker;
     boolean setWorker;
-    final int INF = Integer.MAX_VALUE;
-    final int minimumTreeHealth = GameConstants.SMALL_TREE_CHOPPING_DMG;
+    boolean isScout;
 
     public Data(){}
 
@@ -150,6 +155,9 @@ public class Data {
         workerYReportCh = 30 + x;
         workerYResetCh = 30 + y;
         workerYCh = 30 + z;
+        scoutReportCh = 33 + x;
+        scoutResetCh = 33 + y;
+        scoutCh = 33 + z;
 
         // Fetch Comm Info
         nUnits = uc.read(UnitsCh);
@@ -168,7 +176,17 @@ public class Data {
         workerBarycenter = uc.read(workerBarycenterCh);
         enemyFound = uc.read(enemyFoundCh);
         enemyLoc = uc.read(enemyLocCh);
+        nScout = uc.read(scoutCh);
 
+        if (uc.getType() == UnitType.KNIGHT) {
+            if (nScout < 1) {
+                isScout = true;
+                uc.write(scoutReportCh, nScout + 1);
+                uc.write(scoutResetCh, 0);
+            }
+        }
+
+        //Enemy information for troops
         if (currentRound == 1) {
             enemyLoc = enemyTeam.getInitialLocations()[0].x*1000 + enemyTeam.getInitialLocations()[0].y;
             uc.write(enemyLocCh, enemyLoc);

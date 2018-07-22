@@ -165,8 +165,7 @@ public class Worker {
             } else {
                 data.loneWorker = true;
             }
-        //If not isolated try to flee friendly workers
-        } else if (!data.loneWorker) {
+        } else if (!data.loneWorker) {  //If not isolated try to flee friendly workers
             if (tools.MatesAround(4, UnitType.WORKER) == 0) {
                 data.loneWorker = true;
             } else {
