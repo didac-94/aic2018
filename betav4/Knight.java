@@ -21,6 +21,7 @@ public class Knight extends AttackUnit {
 
         //Movement
         move();
+        dash();
 
         //Try to attack after movement
         attack();
@@ -68,6 +69,10 @@ public class Knight extends AttackUnit {
             target = data.enemyBases[data.firstEnemyBase];
         }
         tools.MoveTo(target);
+    }
+
+    void dash() {
+
     }
 
 }

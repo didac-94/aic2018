@@ -72,19 +72,24 @@ public class Barracks {
     }
 
     void recruit() {
-        //TODO: intentar triar una bona primera direcció
+        //TODO: find a better direction
         for (Direction dir : data.dirs) {
-            //TODO: buscar una millor condició
+            //TODO: find a better condition
             if (!data.enemyContact && data.nScout < 2) {
                 if (uc.canSpawn(dir, UnitType.KNIGHT)) {
                     uc.spawn(dir, UnitType.KNIGHT);
                 }
             } else if (data.enemyContact) {
-                if (data.nAttackUnit < 250) {
-                    //TODO: buscar una millor composició
-                    if (data.nKnight < 2 || Math.random() < 0.1) {
+                if (data.nAttackUnit < 150) {
+                    //TODO: dynamic composition
+                    double R = Math.random();
+                    if (data.nKnight < 2 || R < 0.3) {
                         if (uc.canSpawn(dir, UnitType.KNIGHT)) {
                             uc.spawn(dir, UnitType.KNIGHT);
+                        }
+                    } else if (R < 0.4) {
+                        if (uc.canSpawn(dir, UnitType.ARCHER)) {
+                            uc.spawn(dir, UnitType.ARCHER);
                         }
                     } else {
                         if (uc.canSpawn(dir, UnitType.WARRIOR)) {

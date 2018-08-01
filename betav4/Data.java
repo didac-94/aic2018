@@ -31,9 +31,9 @@ public class Data {
     int treeReportCh;           // Ch 21, 22, 23
     int treeResetCh;            // Ch 21, 22, 23
     int treeCh;                 // Ch 21, 22, 23
-    int setWorkerReportCh;      // Ch 24, 25, 26
-    int setWorkerResetCh;       // Ch 24, 25, 26
-    int setWorkerCh;            // Ch 24, 25, 26
+    int activeWorkerReportCh;   // Ch 24, 25, 26
+    int activeWorkerResetCh;    // Ch 24, 25, 26
+    int activeWorkerCh;         // Ch 24, 25, 26
     int workerXReportCh;        // Ch 27, 28, 29
     int workerXResetCh;         // Ch 27, 28, 29
     int workerXCh;              // Ch 27, 28, 29
@@ -60,7 +60,7 @@ public class Data {
     int nKnight;
     int nBallista;
     int nTrees;
-    int nSetWorker;
+    int nActiveWorker;
     int nPlantedTrees;
     int nAttackUnit;
     int nScout;
@@ -92,7 +92,7 @@ public class Data {
     boolean richEconomy;
     boolean overflowingEconomy;
     boolean loneWorker;
-    boolean setWorker;
+    boolean activeWorker;
     boolean isScout;
     boolean enemyContact;
 
@@ -111,10 +111,16 @@ public class Data {
 
         // Worker variables
         loneWorker = false;
-        setWorker = false;
+        activeWorker = false;
     }
 
+    // This function is called once per turn
     public void Update() {
+
+        // General Updates
+        turnsAlive += 1;
+        VP = allyTeam.getVictoryPoints();
+        enemyVP = enemyTeam.getVictoryPoints();
 
         // Update economy stats
         poorEconomy = (uc.getResources() < 300);
@@ -152,9 +158,9 @@ public class Data {
         treeReportCh = 21 + x;
         treeResetCh = 21 + y;
         treeCh = 21 + z;
-        setWorkerReportCh = 24 + x;
-        setWorkerResetCh = 24 + y;
-        setWorkerCh = 24 + z;
+        activeWorkerReportCh = 24 + x;
+        activeWorkerResetCh = 24 + y;
+        activeWorkerCh = 24 + z;
         workerXReportCh = 27 + x;
         workerXResetCh = 27 + y;
         workerXCh = 27 + z;
@@ -174,38 +180,32 @@ public class Data {
         nKnight = uc.read(knightCh);
         nBallista = uc.read(ballistaCh);
         nTrees = uc.read(treeCh);
-        nSetWorker = uc.read(setWorkerCh);
+        nActiveWorker = uc.read(activeWorkerCh);
         nPlantedTrees = uc.read(plantedTreesCh);
         nAttackUnit = nUnits - nWorker;
         workerX = uc.read(workerXCh);
         workerY = uc.read(workerYCh);
         workerBarycenter = uc.read(workerBarycenterCh);
-        if (uc.read(enemyFoundCh) == 1) {
-            enemyFound = true;
-        } else enemyFound = false;
+        enemyFound = (uc.read(enemyFoundCh) == 1);
         enemyLoc = uc.read(enemyLocCh);
         nScout = uc.read(scoutCh);
 
-        // Random Updates
-        turnsAlive += 1;
-        VP = allyTeam.getVictoryPoints();
-        enemyVP = enemyTeam.getVictoryPoints();
-
         // Assign scouts
-        if (uc.getType() == UnitType.KNIGHT) {
+        if (uc.getType() == UnitType.KNIGHT && !isScout) {
             if (nScout < 2) {
                 isScout = true;
                 uc.write(scoutCh, nScout + 1);
             }
         }
 
-        // Enemy information for troops
+        // Encode the enemy base on turn 1
         if (currentRound == 1) {
             enemyLoc = enemyTeam.getInitialLocations()[0].x*1000 + enemyTeam.getInitialLocations()[0].y;
             uc.write(enemyLocCh, enemyLoc);
             firstEnemyBase = 0;
         }
 
+        // Decide which is the first nonempty enemy base
         for (int i = firstEnemyBase; i < nEnemyBases; i++) {
             if (uc.read(enemyBase0Ch + i) == 0) {
                 uc.write(firstEnemyBaseCh, i);
@@ -219,9 +219,7 @@ public class Data {
             uc.write(enemyContactCh, 0);
         }
 
-        if (uc.read(enemyContactCh) == 1) {
-            enemyContact = true;
-        } else enemyContact = false;
+        enemyContact = (uc.read(enemyContactCh) == 1);
 
     }
 
