@@ -112,11 +112,14 @@ public class AttackUnit {
     }
 
     void attackOak() {
-        TreeInfo[] trees = uc.senseTrees();
-        for (TreeInfo tree : trees) {
-            if (tree.oak) {
-                if (uc.canAttack(tree)) {
-                    uc.attack(tree);
+        //Don't waste your attack on an oak if there are enemies around
+        if (uc.senseUnits(2,data.enemyTeam).length == 0) {
+            TreeInfo[] trees = uc.senseTrees();
+            for (TreeInfo tree : trees) {
+                if (tree.oak) {
+                    if (uc.canAttack(tree)) {
+                        uc.attack(tree);
+                    }
                 }
             }
         }

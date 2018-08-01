@@ -65,15 +65,16 @@ public class Warrior extends AttackUnit {
     }
 
     void counter() {
-        UnitInfo[] units = uc.senseUnits(data.enemyTeam);
+        //TODO: improve counter logic
+        //Counter the enemy with the most health that can attack me
+        UnitInfo[] enemies = uc.senseUnits(data.enemyTeam);
         int maxEnemyHealth = 0;
         UnitInfo target = null;
 
-        //apply counter to the enemy with the most health
-        for(UnitInfo unit : units){
-            if(unit.getHealth() > maxEnemyHealth && uc.canUseActiveAbility(unit.getLocation())){
-                maxEnemyHealth = unit.getHealth();
-                target = unit;
+        for(UnitInfo enemy : enemies){
+            if(enemy.getHealth() > maxEnemyHealth && uc.canUseActiveAbility(enemy.getLocation())){
+                maxEnemyHealth = enemy.getHealth();
+                target = enemy;
             }
         }
         if (target != null) uc.useActiveAbility(target.getLocation());

@@ -45,7 +45,7 @@ public class Worker {
         report();
 
         if (data.loneWorker) uc.println("I'm alone");
-        if (data.setWorker) uc.println("I'm set");
+        if (data.activeWorker) uc.println("I'm set");
 
     }
 
@@ -68,11 +68,11 @@ public class Worker {
                 }
             }
             if (healthyOakFound) {
-                uc.write(data.setWorkerReportCh, uc.read(data.setWorkerReportCh)+1);
-                uc.write(data.setWorkerResetCh, 0);
-                data.setWorker = true;
+                uc.write(data.activeWorkerReportCh, uc.read(data.activeWorkerReportCh)+1);
+                uc.write(data.activeWorkerResetCh, 0);
+                data.activeWorker = true;
             } else {
-                data.setWorker = false;
+                data.activeWorker = false;
             }
         }
     }
@@ -154,7 +154,7 @@ public class Worker {
     }
 
     void plant() {
-        if (data.loneWorker && !data.setWorker) {
+        if (data.loneWorker && !data.activeWorker) {
             TreeInfo[] nearbyTrees = uc.senseTrees(2);
             int nNearbyTrees = nearbyTrees.length;
             if (nNearbyTrees < 6) {
@@ -167,77 +167,49 @@ public class Worker {
                             break;
                         }
                     } else if (uc.getResources() >= 180){
-                        uc.write(data.setWorkerReportCh, uc.read(data.setWorkerReportCh)+1);
-                        uc.write(data.setWorkerResetCh, 0);
-                        data.setWorker = true;
+                        uc.write(data.activeWorkerReportCh, uc.read(data.activeWorkerReportCh)+1);
+                        uc.write(data.activeWorkerResetCh, 0);
+                        data.activeWorker = true;
                     }
                 }
             } else {
-                uc.write(data.setWorkerReportCh, uc.read(data.setWorkerReportCh)+1);
-                uc.write(data.setWorkerResetCh, 0);
-                data.setWorker = true;
+                uc.write(data.activeWorkerReportCh, uc.read(data.activeWorkerReportCh)+1);
+                uc.write(data.activeWorkerResetCh, 0);
+                data.activeWorker = true;
             }
         }
     }
 
     void move() {
-        if (!data.loneWorker && !data.setWorker) {
-            if (data.turnsAlive < 10) {
-                TreeInfo[] visibleTrees = uc.senseTrees();
-                int distToNearestOak = data.INF;
-                TreeInfo nearestOak = null;
-                for (TreeInfo tree : visibleTrees) {
-                    if (tree.oak) {
-                        int distToTree = uc.getLocation().distanceSquared(tree.location);
-                        if (distToTree < distToNearestOak) {
-                            distToNearestOak = distToTree;
-                            nearestOak = tree;
+        if (uc.canMove()) {
+            //Only move if not alone nor active
+            if (!data.loneWorker && !data.activeWorker) {
+                if (data.turnsAlive < 10) {
+                    TreeInfo[] visibleTrees = uc.senseTrees();
+                    int distToNearestOak = data.INF;
+                    TreeInfo nearestOak = null;
+                    for (TreeInfo tree : visibleTrees) {
+                        if (tree.oak) {
+                            int distToTree = uc.getLocation().distanceSquared(tree.location);
+                            if (distToTree < distToNearestOak) {
+                                distToNearestOak = distToTree;
+                                nearestOak = tree;
+                            }
                         }
                     }
+                    if (distToNearestOak != data.INF && distToNearestOak > 1) {
+                        tools.MoveTo(nearestOak.location);
+                    }
+                } else {
+                    Location away = tools.Barycenter(UnitType.WORKER);
+                    away.x = 2 * uc.getLocation().x - away.x;
+                    away.y = 2 * uc.getLocation().y - away.y;
+                    if (!away.isEqual(uc.getLocation()) && uc.isAccessible(away)) {
+                        tools.MoveTo(away);
+                    } else uc.move(tools.GeneralDir(tools.RandomDir()));
                 }
-                if (distToNearestOak != data.INF && distToNearestOak > 1) {
-                    tools.MoveTo(nearestOak.location);
-                }
-            } else if (!data.loneWorker) {
-                Location away = tools.Barycenter(UnitType.WORKER);
-                away.x = 2*uc.getLocation().x - away.x;
-                away.y = 2*uc.getLocation().y - away.y;
-                if (!away.isEqual(uc.getLocation()) && uc.isAccessible(away)) {
-                    tools.MoveTo(away);
-                } else uc.move(tools.GeneralDir(tools.RandomDir()));
             }
         }
-
-
-        //Early  in the life of the unit look for nearby oaks
-        /*if (data.turnsAlive < 10 && !data.loneWorker) {
-            TreeInfo[] visibleTrees = uc.senseTrees();
-            int distToNearestOak = data.INF;
-            TreeInfo nearestOak = null;
-            for (TreeInfo tree : visibleTrees) {
-                if (tree.oak) {
-                    int distToTree = uc.getLocation().distanceSquared(tree.location);
-                    if (distToTree < distToNearestOak) {
-                        distToNearestOak = distToTree;
-                        nearestOak = tree;
-                    }
-                }
-            }
-            if (distToNearestOak != data.INF && distToNearestOak > 1) {
-                tools.MoveTo(nearestOak.location);
-            }
-        } else if (!data.loneWorker) {  //If not isolated try to flee friendly workers
-            if (tools.MatesAround(4, UnitType.WORKER) == 0) {
-                data.loneWorker = true;
-            } else {
-                Location away = tools.Barycenter(UnitType.WORKER);
-                away.x = 2*uc.getLocation().x - away.x;
-                away.y = 2*uc.getLocation().y - away.y;
-                if (!away.isEqual(uc.getLocation()) && uc.isAccessible(away)) {
-                    tools.MoveTo(away);
-                } else uc.move(tools.GeneralDir(tools.RandomDir()));
-            }
-        }*/
     }
 
     void gatherVP() {
@@ -267,12 +239,12 @@ public class Worker {
                 uc.write(data.barracksCh, uc.read(data.barracksCh)+1);
                 uc.write(data.barracksReportCh, uc.read(data.barracksReportCh)+1);
                 uc.write(data.barracksResetCh, uc.read(data.barracksResetCh)+1);
-
             }
         }
     }
 
     void spawnWorker() {
+        //Spawns a worker
         Direction randomDir = tools.GeneralDir(tools.RandomDir());
         if (uc.canSpawn(randomDir, UnitType.WORKER)) {
             uc.spawn(randomDir, UnitType.WORKER);
@@ -282,20 +254,15 @@ public class Worker {
 
     void buildEconomy() {
         //First barracks as soon as possible
-        if (data.nBarracks < 2) {
+        if (data.nBarracks < 1) {
             buildBarracks();
         }
-
-        //This doesn't work as intended
-        /*if (data.nWorker == data.nSetWorker) {
-            spawnWorker();
-        }*/
 
         //Only spawn new units in low pop density areas to maximize expansion
         if (tools.MatesAround(GameConstants.WORKER_SIGHT_RANGE_SQUARED, UnitType.WORKER) < 4) {
             //Create workers to keep a steady production
             if (/*(data.nTrees > 6 * data.nWorker - 1 || data.growthEconomy)
-                    &&*/ (double) data.nSetWorker / (double) data.nWorker > 0.8
+                    &&*/ (double) data.nActiveWorker / (double) data.nWorker > 0.8
                     && uc.getRound() < 1800) {
                 spawnWorker();
             }
