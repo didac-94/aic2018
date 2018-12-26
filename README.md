@@ -71,4 +71,4 @@ We are all mathematics students at FME-UPC, the faculty of mathematics at Univer
 Dídac Fernández - [VashMKS](https://github.com/VashMKS) on git  
 Adrián Hernández - [meave96](https://github.com/meave96) on git  
 Leonor Lamsdorff - [Lenok542](https://github.com/Lenok542) on git  
-Andreu Huguet
+Andreu Huguet - [Huguet57](https://github.com/Huguet57) on git
