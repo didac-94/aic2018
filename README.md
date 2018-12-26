@@ -66,7 +66,7 @@ More on [combat](#combat) below.
 Those units were hard to control so we didn't spend any time with them. As it turns out, nobody in the contest ended up using them due to this.
 
 # Team
-We are all mathematics students at FME-UPC, the faculty of mathematics at Universitat Politécnica de Catalunya, Barcelona, Spain
+We are all mathematics students at FME-UPC, the faculty of mathematics at Universitat Politècnica de Catalunya, Barcelona, Spain
 
 Dídac Fernández - [VashMKS](https://github.com/VashMKS) on git  
 Adrián Hernández - [meave96](https://github.com/meave96) on git  
