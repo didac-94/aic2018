@@ -1,6 +1,6 @@
 # AIC2018
 
-[![latest build](betav4)]
+**latest build** `betav4`
 
 This is a repo for our bots in the [AIC2018](https://www.coliseum.ai/home) AI competition.
 
