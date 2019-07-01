@@ -10,7 +10,7 @@ Even though this bot is an unfinished work it's functional and carried us to 9th
 Basic (very bad) bugpath. Nothing to see here... **Improvement:** there are MANY optimizations that could have been done on the movement algorithm but this had less priority than other stuff so we took the basic one and ran with it - pun intended.
 
 ### Combat
-Combat is reduced to simple quitting and using special abilities when more or less suitable. We prioritize targets with less health. **Improvement:** Particularize combat to each class to have them perform better (e.g. archers hit and run and keep a safe distance, units back up when low on health, etc)
+Combat is reduced to simple kiting and using special abilities when more or less suitable. We prioritize targets with less health. **Improvement:** Particularize combat to each class to have them perform better (e.g. archers hit and run and keep a safe distance, units back up when low on health, etc)
 
 ### Communication
 We had access to a long integer vector accessible by all units. We use this for communication and to keep track of certain information: alive ally tracking, enemy units seen, composition of our/their army, where an enemy was last seen, where to attack, where are the oaks, ID of special units like explorers, etc)
@@ -23,16 +23,16 @@ The comm channels (aka the positions in the comm vector where each piece of info
   - Container 2 holds the value obtained from previous round. In our example, this position in the vector holds how many trees our army saw in the previous round.
   - Container 3 serves as reset. Each unit will reset this counter (to whatever the default value might be) whenever it makes use of the channel.
   - Each round we rotate the functions of our containers. Container 1 will be container 2 in the next round, 2 will be 3 and 3 will be 1.
-- This way we always have access to the most accurate calculation (the one from the previous round) and keep updating the one for next round in a distributed way without caring for the order of the units.
+- This way we always have access to the most accurate calculation (the one from the previous round) and keep updating the one for next round in a distributed way without caring for the order of the units messing with it.
 
 ### Workers
 Early in the game look for oaks, since they are more efficient to gather than petits. **Improvement:** if multiple workers are accessible have at least one worker constantly exploring for more oaks in the early rounds since one worker will be able to use all the available resources to plant by himself
 
 As long as there are healthy oaks around, the workers won't plant more trees and will just mine the oaks and making more workers to boost the economy (up to certain restrictions)
 
-If no oaks are around and planting is required, and since each worker can efficiently take care of at most 6 petits, we tell the workers to spread out of their center of mass until they are sufficiently alone and can plant their 6 trees. **Improvement:** they can and should position themselves in a  more efficient way so as to take exactly 6 units of area each, which can be done by assigning certain coordinates to each worker to be on and clearing those coordinates after it dies or leaves.
+If no oaks are around and planting is required, and since each worker can efficiently take care of at most 6 petits, we tell the workers to spread out of their center of mass until they are sufficiently alone and can plant their 6 trees. **Improvement:** they can and should position themselves in a  more efficient way so as to take exactly 6 units of area each, which can be done by assigning certain coordinates to each worker in a lattice structure to be on and clearing those coordinates after it dies or leaves.
 
-After they have found their spot they won't ever move again. **Improvement:** tell them to flee (or fight!) enemies for example.
+After they have found their spot they won't ever move again. **Improvement:** tell them to flee (or fight) enemies for example.
 
 Workers will rush and build a single barracks as soon as possible and then wait for certain economy requirements to keep building more.
 
@@ -44,7 +44,7 @@ The barracks have 2 modes:
 
 
 - War mode (an enemy unit has been spotted):
-  - Recruit troops subject to economy restrictions and in hardcoded proportions of class (70% W, 20% A, 10% K was our last try iirc). **Improvement:** Based on the observed composition of the enemy army, generate a suitable counter-composition (e.g. if enemy is all warriors make all archers, rock-paper-scissors yada, yada). This is the major improvement that was next on our list before we ran out of time.
+  - Recruit troops subject to economy restrictions and in hardcoded proportions of class (70% W, 20% A, 10% K was our last try iirc). **Improvement:** Based on the observed composition of the enemy army, generate a suitable counter-composition (e.g. if enemy is all warriors make all archers, rock-paper-scissors yadda yadda). This is the major improvement that was next on our list before we ran out of time.
   - Maintain the 2 [Knight](#knights) minimum.
 
 ### Knights
