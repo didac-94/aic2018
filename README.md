@@ -68,7 +68,7 @@ Those units were hard to control so we didn't spend any time with them. As it tu
 # Team
 We are all mathematics students at FME-UPC, the faculty of mathematics at Universitat Politècnica de Catalunya, Barcelona, Spain
 
-Dídac Fernández - [VashMKS](https://github.com/VashMKS) on git  
+Dídac Fernández - [didac-94](https://github.com/didac-94) on git  
 Adrián Hernández - [meave96](https://github.com/meave96) on git  
 Leonor Lamsdorff - [Lenok542](https://github.com/Lenok542) on git  
 Andreu Huguet - [Huguet57](https://github.com/Huguet57) on git
